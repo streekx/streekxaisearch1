@@ -333,12 +333,12 @@ export default function Home({ user, weather, onSearch, onOpenProfile, searchHis
         <div className="flex flex-col items-center px-6">
             
             {/* LOGO REPLACED WITH DOODLE */}
-            <div className="mb-0 animate-fade-in flex flex-col items-center">
+            <div className="mb-2 animate-fade-in flex flex-col items-center">
                 <img src="/assets/streekx-doodle.png" alt="StreekX" className="h-40 object-contain drop-shadow-2xl" />
             </div>
 
             {weather && (
-            <div className="flex items-center gap-2 text-gray-500 mb-4 font-semibold bg-gray-100 dark:bg-[#1c1c1e] px-4 py-1 rounded-full border border-gray-200 dark:border-[#2c2c2e] text-xs">
+            <div className="flex items-center gap-2 text-gray-500 mb-6 font-semibold bg-gray-100 dark:bg-[#1c1c1e] px-4 py-1 rounded-full border border-gray-200 dark:border-[#2c2c2e] text-xs">
                 <span>{weather.condition}, {weather.temp}°</span>
             </div>
             )}

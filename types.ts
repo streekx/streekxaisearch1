@@ -1,4 +1,61 @@
 
+// Security & Authentication
+export interface TwoStepAuth {
+  id: string;
+  user_id: string;
+  method: 'authenticator' | 'security_key' | 'phone' | 'backup_code';
+  identifier: string; // phone number, authenticator name, security key ID
+  verified: boolean;
+  created_at: string;
+}
+
+export interface RecoveryOption {
+  id: string;
+  user_id: string;
+  type: 'phone' | 'streekx_id' | 'backup_codes';
+  value: string; // encrypted phone or backup codes
+  created_at: string;
+}
+
+export interface SecurityCode {
+  user_id: string;
+  code: string;
+  created_at: string;
+  expires_at: string;
+}
+
+export interface PasswordEntry {
+  id: string;
+  user_id: string;
+  website: string;
+  username: string;
+  password: string; // encrypted
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DeviceInfo {
+  id: string;
+  user_id: string;
+  device_name: string;
+  device_type: 'mobile' | 'tablet' | 'desktop';
+  browser: string;
+  os: string;
+  last_active: string;
+  is_current: boolean;
+  created_at: string;
+}
+
+export interface ThirdPartyConnection {
+  id: string;
+  user_id: string;
+  platform: string; // google, github, microsoft, apple, etc.
+  account_email: string;
+  account_name?: string;
+  connected_at: string;
+  last_used?: string;
+}
+
 // User & Profile
 export interface UserProfile {
   id: string;
@@ -13,6 +70,11 @@ export interface UserProfile {
   mobile?: string;
   recovery_id?: string;
   two_step_enabled?: boolean;
+  two_step_auth?: TwoStepAuth[];
+  recovery_options?: RecoveryOption[];
+  security_code?: SecurityCode;
+  devices?: DeviceInfo[];
+  connections?: ThirdPartyConnection[];
   created_at: string;
 }
 

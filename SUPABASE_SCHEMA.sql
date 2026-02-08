@@ -82,7 +82,98 @@ create policy "Users can manage messages"
     )
   );
 
--- 6. AUTOMATION (Trigger)
+-- 6. TWO-STEP AUTHENTICATION TABLE
+create table public.two_step_auth (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  method text not null check (method in ('authenticator', 'security_key', 'phone', 'backup_code')),
+  identifier text not null,
+  verified boolean default false,
+  created_at timestamptz default now(),
+  unique(user_id, method, identifier)
+);
+
+-- 7. RECOVERY OPTIONS TABLE
+create table public.recovery_options (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  type text not null check (type in ('phone', 'streekx_id', 'backup_codes')),
+  value text not null encrypted with (cipher = 'aes-256-cbc', key = 'encryption_key'),
+  created_at timestamptz default now()
+);
+
+-- 8. SECURITY CODES TABLE
+create table public.security_codes (
+  user_id uuid references public.profiles(id) on delete cascade not null primary key,
+  code text not null,
+  created_at timestamptz default now(),
+  expires_at timestamptz default now() + interval '30 days'
+);
+
+-- 9. PASSWORD MANAGER TABLE
+create table public.password_manager (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  website text not null,
+  username text not null,
+  password text not null encrypted with (cipher = 'aes-256-cbc', key = 'encryption_key'),
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- 10. DEVICE MANAGEMENT TABLE
+create table public.devices (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  device_name text not null,
+  device_type text check (device_type in ('mobile', 'tablet', 'desktop')),
+  browser text,
+  os text,
+  last_active timestamptz default now(),
+  is_current boolean default false,
+  created_at timestamptz default now()
+);
+
+-- 11. THIRD PARTY CONNECTIONS TABLE
+create table public.third_party_connections (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  platform text not null,
+  account_email text not null,
+  account_name text,
+  connected_at timestamptz default now(),
+  last_used timestamptz,
+  unique(user_id, platform, account_email)
+);
+
+-- 12. RLS FOR NEW TABLES
+alter table public.two_step_auth enable row level security;
+alter table public.recovery_options enable row level security;
+alter table public.security_codes enable row level security;
+alter table public.password_manager enable row level security;
+alter table public.devices enable row level security;
+alter table public.third_party_connections enable row level security;
+
+-- 13. RLS POLICIES FOR NEW TABLES
+create policy "Users can manage own 2FA"
+  on public.two_step_auth for all using (auth.uid() = user_id);
+
+create policy "Users can manage own recovery options"
+  on public.recovery_options for all using (auth.uid() = user_id);
+
+create policy "Users can manage own security codes"
+  on public.security_codes for all using (auth.uid() = user_id);
+
+create policy "Users can manage own passwords"
+  on public.password_manager for all using (auth.uid() = user_id);
+
+create policy "Users can manage own devices"
+  on public.devices for all using (auth.uid() = user_id);
+
+create policy "Users can manage own connections"
+  on public.third_party_connections for all using (auth.uid() = user_id);
+
+-- 14. AUTOMATION (Trigger)
 -- Automatically creates a profile entry when a user signs up via Supabase Auth
 create or replace function public.handle_new_user() 
 returns trigger as $$
